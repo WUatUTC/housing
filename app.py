@@ -3,9 +3,17 @@ import pandas as pd
 import numpy as np
 from tensorflow import keras
 import joblib
+from keras.saving import register_keras_serializable
+import tensorflow as tf
+
+# Register the custom mse function
+@register_keras_serializable()
+def mse(y_true, y_pred):
+    return tf.reduce_mean(tf.square(y_true - y_pred))
 
 # Load the saved ANN model and preprocessor
-model = keras.models.load_model('ann_model.h5')
+custom_objects = {'mse': mse}
+model = keras.models.load_model('ann_model.h5', custom_objects=custom_objects)
 preprocessor = joblib.load('preprocessor.pkl')
 
 st.title('Ames Housing Price Predictor')
@@ -46,3 +54,4 @@ if st.button('Predict Sale Price'):
     predicted_price = prediction[0][0]
 
     st.success(f"Predicted Sale Price: ${predicted_price:,.2f}")
+
