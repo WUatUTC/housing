@@ -17,7 +17,7 @@ model = keras.models.load_model('ann_model.h5', custom_objects=custom_objects)
 preprocessor = joblib.load('preprocessor.pkl')
 
 st.title('AI Powered Ames Housing Price Predictor')
-st.write("Enter essential house details below to predict the sale price:")
+st.write("This App was powered by a trained AI model. Please enter essential house details below to predict the sale price:")
 
 # -- User Inputs for the selected features --
 
