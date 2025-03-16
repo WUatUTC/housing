@@ -1,57 +1,78 @@
+# This app is used to develop the AI powered housing price predictors on Streamlit
 import streamlit as st
 import pandas as pd
-import numpy as np
-from tensorflow import keras
 import joblib
-from keras.saving import register_keras_serializable
-import tensorflow as tf
+from tensorflow import keras
 
-# Register the custom mse function
-@register_keras_serializable()
-def mse(y_true, y_pred):
-    return tf.reduce_mean(tf.square(y_true - y_pred))
+# === Load pre-trained models and preprocessors ===
+# (Ensure that the following files are in your repository)
+model_selected = keras.models.load_model('model_selected.h5')
+model_all = keras.models.load_model('model_all.h5')
+preprocessor_selected = joblib.load('preprocessor_selected.pkl')
+preprocessor_all = joblib.load('preprocessor_all.pkl')
 
-# Load the saved ANN model and preprocessor
-custom_objects = {'mse': mse}
-model = keras.models.load_model('ann_model.h5', custom_objects=custom_objects)
-preprocessor = joblib.load('preprocessor.pkl')
+# === Define default values for non-essential features for the full model ===
+# This dictionary should include every feature expected by model_all.
+# Here we update the defaults for the essential features based on user input later.
+default_values = {
+    'Age': 30,              # Will be overwritten by user input
+    'Gr Liv Area': 1500,    # Will be overwritten by user input
+    'Lot Area': 8000,       # Will be overwritten by user input
+    'Overall Qual': 6,      # Will be overwritten by user input
+    'Neighborhood': 'CollgCr',  # Will be overwritten by user input
+    # Add other non-essential features with default values:
+    # 'Year Built': 1970,
+    # 'Mas Vnr Area': 100,
+    # 'Overall Cond': 5,
+    # ... (include all additional features as needed)
+}
 
-st.title('AI Powered Ames Housing Price Predictor')
-st.write("This app was powered by a trained AI model. Please enter essential house details below to predict the sale price:")
+st.title("Ames Housing Price Prediction")
 
-# -- User Inputs for the selected features --
+# Sidebar: let the user choose which model to use
+model_choice = st.sidebar.radio("Select Model", 
+                                ("Essential Features Model", "All Features Model"))
 
-# Since 'Age' in our data is computed as [Yr Sold] - [Year Built],
-# we ask for Age directly (you might also choose to compute it if you collect both)
-age = st.number_input('Age (years)', min_value=0, value=30)
+st.header("Input Housing Features (Essential Only)")
 
-gr_liv_area = st.number_input('Gr Liv Area (sq ft)', min_value=0, value=1500)
-lot_area = st.number_input('Lot Area (sq ft)', min_value=0, value=5000)
-overall_qual = st.slider('Overall Qual (1-10)', min_value=1, max_value=10, value=5)
+# User inputs for essential features
+age = st.number_input("Age (Yr Sold - Year Built)", min_value=0, max_value=200, value=30)
+gr_liv_area = st.number_input("Ground Living Area (sq ft)", min_value=300, max_value=10000, value=1500)
+lot_area = st.number_input("Lot Area (sq ft)", min_value=500, max_value=50000, value=8000)
+overall_qual = st.number_input("Overall Quality (1-10)", min_value=1, max_value=10, value=6)
+neighborhood = st.selectbox("Neighborhood", 
+                            options=["CollgCr", "Veenker", "Crawfor", "NoRidge", "Mitchel"])
 
-# For the categorical Neighborhood, define a sample list or load from your dataset
-neighborhood_options = ['CollgCr', 'Veenker', 'Crawfor', 'NoRidge', 'Mitchel']
-neighborhood = st.selectbox('Neighborhood', options=neighborhood_options)
-
-# When the user clicks the button, process input and predict
-if st.button('Predict Sale Price'):
-    # Create a dataframe matching the expected input structure
-    input_data = pd.DataFrame({
-        'Age': [age],
-        'Gr Liv Area': [gr_liv_area],
-        'Lot Area': [lot_area],
-        'Overall Qual': [overall_qual],
-        'Neighborhood': [neighborhood]
-    })
-
-    # Preprocess the input data using the saved preprocessor
-    input_processed = preprocessor.transform(input_data)
-    if hasattr(input_processed, "toarray"):
-        input_processed = input_processed.toarray()
-
-    # Predict the sale price using the loaded model
-    prediction = model.predict(input_processed)
-    predicted_price = prediction[0][0]
-
-    st.success(f"Predicted Sale Price: ${predicted_price:,.0f}")
-
+# When the user clicks the Predict button
+if st.button("Predict Sale Price"):
+    if model_choice == "Essential Features Model":
+        # Build a DataFrame from the essential features only
+        input_data = pd.DataFrame({
+            'Age': [age],
+            'Gr Liv Area': [gr_liv_area],
+            'Lot Area': [lot_area],
+            'Overall Qual': [overall_qual],
+            'Neighborhood': [neighborhood]
+        })
+        # Preprocess input using the selected-features preprocessor
+        processed_data = preprocessor_selected.transform(input_data)
+        # Get prediction from the essential-features model
+        prediction = model_selected.predict(processed_data)
+        st.success(f"Predicted Sale Price (Essential Model): ${prediction[0][0]:,.2f}")
+    
+    else:
+        # For the full model, start with the default values
+        input_dict = default_values.copy()
+        # Overwrite the essential features with user inputs
+        input_dict['Age'] = age
+        input_dict['Gr Liv Area'] = gr_liv_area
+        input_dict['Lot Area'] = lot_area
+        input_dict['Overall Qual'] = overall_qual
+        input_dict['Neighborhood'] = neighborhood
+        # Create a DataFrame with a single row; ensure it has all features expected by model_all
+        input_df = pd.DataFrame([input_dict])
+        # Preprocess input using the all-features preprocessor
+        processed_data = preprocessor_all.transform(input_df)
+        # Get prediction from the full-features model
+        prediction = model_all.predict(processed_data)
+        st.success(f"Predicted Sale Price (All Features Model): ${prediction[0][0]:,.2f}")
