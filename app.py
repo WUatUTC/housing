@@ -62,7 +62,7 @@ if st.button("Predict Sale Price"):
         processed_data = preprocessor_selected.transform(input_data)
         # Get prediction from the essential-features model
         prediction = model_selected.predict(processed_data)
-        st.success(f"Predicted Sale Price (Essential Model): ${prediction[0][0]:,.2f}")
+        st.success(f"Predicted Sale Price (Essential Model): ${prediction[0][0]:,.0f}")
     
     else:
         # For the full model, start with the default values
@@ -92,7 +92,7 @@ if st.button("Predict Sale Price"):
         
         processed_data = preprocessor_all.transform(default_all)
         prediction = model_all.predict(processed_data)
-        st.success(f"Predicted Sale Price (All Features Model): ${prediction[0][0]:,.2f}")
+        st.success(f"Predicted Sale Price (All Features Model): ${prediction[0][0]:,.0f}")
 
 
 
