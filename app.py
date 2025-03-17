@@ -82,7 +82,7 @@ if st.button("Predict Sale Price"):
         # st.success(f"Predicted Sale Price (All Features Model): ${prediction[0][0]:,.2f}")
         # Update only the essential features with user inputs.
         
-        default_all = pd.read_csv('default_all_features.csv', index_col=0)
+        default_all = pd.read_csv('default_all_features.csv')
         # Now, 'default_all' contains all the features expected by the preprocessor.
         default_all.loc[0, 'Age'] = age
         default_all.loc[0, 'Gr Liv Area'] = gr_liv_area
