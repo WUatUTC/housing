@@ -1,4 +1,5 @@
 # This app is used to develop the AI powered housing price predictors on Streamlit
+
 import streamlit as st
 import pandas as pd
 import joblib
@@ -65,17 +66,36 @@ if st.button("Predict Sale Price"):
     
     else:
         # For the full model, start with the default values
-        input_dict = default_values.copy()
+        # input_dict = default_values.copy()
         # Overwrite the essential features with user inputs
-        input_dict['Age'] = age
-        input_dict['Gr Liv Area'] = gr_liv_area
-        input_dict['Lot Area'] = lot_area
-        input_dict['Overall Qual'] = overall_qual
-        input_dict['Neighborhood'] = neighborhood
+        # input_dict['Age'] = age
+        # input_dict['Gr Liv Area'] = gr_liv_area
+        # input_dict['Lot Area'] = lot_area
+        # input_dict['Overall Qual'] = overall_qual
+        # input_dict['Neighborhood'] = neighborhood
         # Create a DataFrame with a single row; ensure it has all features expected by model_all
-        input_df = pd.DataFrame([input_dict])
+        # input_df = pd.DataFrame([input_dict])
         # Preprocess input using the all-features preprocessor
-        processed_data = preprocessor_all.transform(input_df)
-        # Get prediction from the full-features model
+        # processed_data = preprocessor_all.transform(input_df)
+        # # Get prediction from the full-features model
+        # prediction = model_all.predict(processed_data)
+        # st.success(f"Predicted Sale Price (All Features Model): ${prediction[0][0]:,.2f}")
+        # Update only the essential features with user inputs.
+        
+        default_all = pd.read_csv('default_all_features.csv', index_col=0)
+        # Now, 'default_all' contains all the features expected by the preprocessor.
+        default_all.loc[0, 'Age'] = age
+        default_all.loc[0, 'Gr Liv Area'] = gr_liv_area
+        default_all.loc[0, 'Lot Area'] = lot_area
+        default_all.loc[0, 'Overall Qual'] = overall_qual
+        default_all.loc[0, 'Neighborhood'] = neighborhood
+        
+        processed_data = preprocessor_all.transform(default_all)
         prediction = model_all.predict(processed_data)
         st.success(f"Predicted Sale Price (All Features Model): ${prediction[0][0]:,.2f}")
+
+
+
+
+
+
