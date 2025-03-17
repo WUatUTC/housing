@@ -31,7 +31,7 @@ default_values = {
     # ... (include all additional features as needed)
 }
 
-st.title("Ames Housing Price Prediction")
+st.title("AI Powered Ames Housing Price Prediction")
 
 # Sidebar: let the user choose which model to use
 model_choice = st.sidebar.radio("Select Model", 
